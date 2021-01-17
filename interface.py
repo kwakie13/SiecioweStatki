@@ -8,7 +8,6 @@ columns = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
 buttons = {}
 
 def player_grid(self, nick):
-    columns = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
     groupBox = QGroupBox(nick)  # box for player's buttons
     grid = QGridLayout()  # creating grid to place buttons
 
@@ -81,12 +80,10 @@ class GUI(QWidget):
 
     def whenClicked(self):
         sender = self.sender()
-        sender.setStyleSheet("background-color : yellow")
 
         if isinstance(sender, QPushButton):
             pass
             # print(sender.objectName)
-
 
 app = QApplication(sys.argv)  # creating app
 window = GUI()  # creating window with GUI class
