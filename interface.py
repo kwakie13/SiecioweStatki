@@ -15,7 +15,6 @@ def player_grid(self, nick):
     for j in range(len(columns)):  # for each column
         for k in range(10):  # for each row
             ID = (nick + "_" + columns[j] + str(k + 1))  # ID for a button
-            print(ID)
 
             button = QPushButton()  # creating button with ID as a name
             button.setObjectName(ID)
@@ -38,32 +37,8 @@ class GUI(QWidget):
     def interface(self):
         table_scheme = QGridLayout()  # creating table layout for a window
 
-        """
-        for i in range(players_no):
-            groupBox = QGroupBox(nicks[i])  # stworzenie boxa na przyciski gracza
-            grid = QGridLayout()  # stworzenie siatki pod przyciski
-            for j in range(len(columns)):
-                for k in range(10):
-                    ID = (
-                        "Player_" + str(i + 1) + "_" + columns[j] + str(k + 1)
-                    )  # ID dla przycisku
-                    print(ID)
-
-                    button = QPushButton(
-                        self, accessibleName=ID, objectName=ID
-                    )  # tworze przycisk z okreslona nazwa
-
-                    button.clicked.connect(
-                        self.whenClicked
-                    )  # przypisuje akcje do klikniecia
-
-                    grid.addWidget(button, j, k)  # dodaje do gridu
-                    self.saveButton(button)  # zapisuje jego nazwe
-
-            groupBox.setLayout(grid) """
-
-        for i in range(len(nicks)):
-            box = player_grid(nicks[i])
+        for i in range(len(nicks)): # loop creating grids for opponents
+            box = player_grid(self, nicks[i])
             table_scheme.addWidget(box, 0, i)
 
         # table_scheme.addWidget(groupBox, 0, i) # adding to main scheme (window)
