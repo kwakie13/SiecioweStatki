@@ -69,7 +69,7 @@ int main() {
                 perror("recv sie nie powiodl\n");
                 break;
             }
-            printf("odebrano: %s", buf);
+            printf("odebrano: %s\n", buf);
 
             capacity -= received;
             pointer += received;
