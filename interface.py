@@ -70,6 +70,18 @@ class GUI(QWidget):
 
         self.interface()
 
+        window = self.frameGeometry()  # checking window's geometry
+        window.moveCenter(QDesktopWidget().availableGeometry().center())  # move to the screen's center point
+        self.move(window.topLeft())
+
+        self.setWindowTitle("Statki")
+        self.setWindowIcon(QIcon("ship.png"))
+
+        self.setWindowFlags(Qt.WindowCloseButtonHint | Qt.WindowMinimizeButtonHint)  # blocking window maximizing
+        self.setMaximumSize(self.size())  # prevent resizing
+
+        self.show()
+
     def interface(self):
         table_scheme = QGridLayout()  # creating table layout for a window
 
@@ -88,14 +100,6 @@ class GUI(QWidget):
         table_scheme.addWidget(row, 3, 1)
 
         self.setLayout(table_scheme)
-
-        self.setGeometry(0, 0, 600, 200)
-        window = self.frameGeometry()  # checking window's geometry
-        window.moveCenter(QDesktopWidget().availableGeometry().center())  # move to the screen's center point
-        self.move(window.topLeft())
-        # self.setWindowIcon(QIcon("kalkulator.png"))
-        self.setWindowTitle("Statki")
-        self.show()
 
     def saveButton(self, obj):
         buttons[obj.objectName()] = obj
