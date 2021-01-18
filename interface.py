@@ -8,15 +8,20 @@ nicks = ["Gracz 1", "Gracz 2", "Gracz 3"]
 columns = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
 buttons = {}
 
-def indicate_player_label(self, label): # function indicating player move (changing label background color)
+my_nick = "piotrtheduck"
+
+
+def indicate_player_label(self, label):  # function indicating player move (changing label background color)
     label.setStyleSheet("background-color: lightgreen; border: 1 solid black; border-radius: 15; padding: 5")
 
     return label
 
-def reset_player_label(self, label): # function resetting move indicator
+
+def reset_player_label(self, label):  # function resetting move indicator
     label.setStyleSheet("border: 1 solid black; border-radius: 15; padding: 5")
 
     return label
+
 
 def player_grid(self, nick):
     groupBox = QGroupBox()  # box for player's buttons
@@ -39,6 +44,7 @@ def player_grid(self, nick):
 
     return groupBox
 
+
 def player_label(self, nick):
     groupBox = QGroupBox()
     groupBox.setStyleSheet("border : none")
@@ -47,15 +53,16 @@ def player_label(self, nick):
     label.setObjectName("{0}_label".format(nick))
     self.saveButton(label)
 
-    reset_player_label(self, label) # indicating it's player move
+    reset_player_label(self, label)  # indicating it's player move
     label.setFont(QFont('Calibri', 15))
 
     row = QHBoxLayout()
-    row.addWidget(label, alignment = Qt.AlignCenter)
+    row.addWidget(label, alignment=Qt.AlignCenter)
 
     groupBox.setLayout(row)
 
     return groupBox
+
 
 class GUI(QWidget):
     def __init__(self, parent=None):
@@ -66,13 +73,19 @@ class GUI(QWidget):
     def interface(self):
         table_scheme = QGridLayout()  # creating table layout for a window
 
-        for i in range(len(nicks)): # loop creating labels with indicators for opponents
+        for i in range(len(nicks)):  # loop creating labels with indicators for opponents
             row = player_label(self, nicks[i])
             table_scheme.addWidget(row, 0, i)
 
         for i in range(len(nicks)):  # loop creating grids for opponents
             box = player_grid(self, nicks[i])
             table_scheme.addWidget(box, 1, i)
+
+        box = player_grid(self, my_nick)
+        table_scheme.addWidget(box, 2, 1)
+
+        row = player_label(self, my_nick)
+        table_scheme.addWidget(row, 3, 1)
 
         self.setLayout(table_scheme)
 
