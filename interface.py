@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 import sys
 
 from PyQt5.Qt import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 
 nicks = ["Gracz 1", "Gracz 2", "Gracz 3"]
 columns = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
@@ -64,15 +66,46 @@ def player_label(self, nick):
     return groupBox
 
 
-class GUI(QWidget):
-    def __init__(self, parent=None):
+class IntroScreen(QWidget):
+    def __init__(self):
+        super().__init__()
+
+        # self.setGeometry(100, 100, 600, 400)
+
+        button = QPushButton("Click", self)
+        button.clicked.connect(self.clickMe)
+        button.setGeometry(200, 150, 100, 30)
+
+        self.centerWindow()
+
+        self.setWindowTitle("Statki")
+        self.setWindowIcon(QIcon("ship.png"))
+
+        self.setWindowFlags(Qt.WindowCloseButtonHint | Qt.WindowMinimizeButtonHint)  # blocking window maximizing
+        self.setMaximumSize(self.size())  # prevent resizing
+
+        self.show()
+
+    def centerWindow(self):
+        frameGm = self.frameGeometry()
+        screen = QApplication.desktop().screenNumber(QApplication.desktop().cursor().pos())
+        centerPoint = QApplication.desktop().screenGeometry(screen).center()
+        frameGm.moveCenter(centerPoint)
+        self.move(frameGm.topLeft())
+
+    def clickMe(self):
+        self.w = GameScreen()
+        self.w.show()
+        self.close()
+
+
+class GameScreen(QWidget):
+    def __init__(self):
         super().__init__()
 
         self.interface()
 
-        window = self.frameGeometry()  # checking window's geometry
-        window.moveCenter(QDesktopWidget().availableGeometry().center())  # move to the screen's center point
-        self.move(window.topLeft())
+        self.centerWindow()
 
         self.setWindowTitle("Statki")
         self.setWindowIcon(QIcon("ship.png"))
@@ -107,6 +140,13 @@ class GUI(QWidget):
     def findButton(self, text):
         return buttons[text]
 
+    def centerWindow(self):
+        frameGm = self.frameGeometry()
+        screen = QApplication.desktop().screenNumber(QApplication.desktop().cursor().pos())
+        centerPoint = QApplication.desktop().screenGeometry(screen).center()
+        frameGm.moveCenter(centerPoint)
+        self.move(frameGm.topLeft())
+
     # def closeEvent(self, event):  # are you sure to quit?
     #     odp = QMessageBox.question(
     #         self,
@@ -134,5 +174,5 @@ class GUI(QWidget):
 
 
 app = QApplication(sys.argv)  # creating app
-window = GUI()  # creating window with GUI class
+window = IntroScreen()
 sys.exit(app.exec_())  # starting the app
