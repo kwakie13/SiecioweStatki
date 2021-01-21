@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <sys/epoll.h>
+#include <errno.h>
 
 #define USED_PORT 2137
 #define LISTEN_BACKLOG 10
@@ -61,8 +62,98 @@ int main() {
     events = calloc(MAX_EPOLL_EVENTS, sizeof(event));
 
     //infinite loop with epoll wait here
+    int loopEnded = 0;
+    while(!loopEnded){
+
+        int selectorWait;
+
+        selectorWait = epoll_wait(selector, events, MAX_EPOLL_EVENTS, -1);
+        if (selectorWait == -1) {
+            printf("COULD NOT WAIT FOR EVENTS.. CLOSING THE EVENT");
+            continue;
+        }
+
+        int eventIter;
+        for( eventIter=0 ; eventIter < selector; eventIter++){
+
+            if (events[eventIter].data.fd == baseSocket){
+
+                while(1){
+
+                    struct sockaddr address_in;
+                    int socketAccept, socketUnBlocked, alterInterestLists;
+
+                    socketAccept = accept(baseSocket, &address_in, (socklen_t *)sizeof(address_in));
+                    if (socketAccept == -1) {
+                        printf("NO CONNECTIONS TO PROCESS OR ACCEPT ERROR");
+                        break;
+                    }
+
+                    socketUnBlocked = disableSocketBlocking(socketAccept);
+                    if (!socketUnBlocked){
+                        printf("EVENT SOCKET COULD NOT BE UNBLOCKED..");
+                        exit(EXIT_FAILURE);
+                    }
+
+                    event.data.fd = socketAccept;
+                    event.events = EPOLLIN | EPOLLET;
+
+                    alterInterestLists = epoll_ctl(selector, EPOLL_CTL_ADD, socketAccept,&event);
+                    if(alterInterestLists == -1){
+                        printf("COULD NOT ALTER INTEREST LIST..");
+                        exit(EXIT_FAILURE);
+                    }
 
 
+
+
+
+                }
+
+            } else {
+
+                int dataIsRead = 0;
+                char bufferinio[2048];
+
+                while (1) {
+                    size_t read_count;
+                    char buf[1024];
+
+                    read_count = read(events[eventIter].data.fd, buf, sizeof(buf));
+                    if (read_count == -1) {
+
+                        if (errno != EAGAIN) {
+                            dataIsRead = 1;
+                        }
+
+                        break;
+
+                    }
+                    else if (read_count == 0) {
+                        dataIsRead = 1;
+                        strcat(bufferinio, buf);
+                        break;
+                    }
+
+
+                }
+                if (dataIsRead) {
+                    printf("DZIALA\n");
+                    printf("\n%s\n", bufferinio);
+                    close(events[eventIter].data.fd);
+
+                }
+
+
+
+            }
+
+
+        }
+
+    }
+
+    free(events);
 
     close(selector);
 
