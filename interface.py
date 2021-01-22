@@ -23,7 +23,7 @@ def reset_player_label(self, label):  # function resetting move indicator
     return label
 
 
-def player_grid(self, nick):
+def player_grid(self, nick, saving, flat):
     groupBox = QGroupBox()  # box for player's buttons
     grid = QGridLayout()  # creating grid to place buttons
 
@@ -45,14 +45,22 @@ def player_grid(self, nick):
         for k in range(10):  # for each row
             ID = (nick + "_" + columns[j] + str(k + 1))  # ID for a button
 
-            button = QPushButton()  # creating button with ID as a name
+            #button = QPushButton()  # creating button with ID as a name
+
+            if flat:
+                button = QPushButton(enabled = False)
+            else:
+                button = QPushButton()
+
             button.setObjectName(ID)
             button.setMaximumSize(20, 20)
 
             button.clicked.connect(self.whenClicked)  # connecting action to click
 
             grid.addWidget(button, j + 1, k + 1)  # adding button to grid
-            self.saveButton(button)  # saving button's name
+
+            if saving:
+                self.saveButton(button)  # saving button's name
 
     groupBox.setLayout(grid)  # setting box's layout (previously created and filled grid)
 
@@ -109,10 +117,11 @@ class IntroScreen(QWidget):
         groupBox.setLayout(nick_line)
         rows.addWidget(groupBox)
 
-        grid = player_grid(self, "setting_ships")
+        grid = player_grid(self, "setting_ships", False, False)
         rows.addWidget(grid)
 
         proceed = QPushButton("Dalej", self)
+
         proceed.clicked.connect(self.clickMe)
         rows.addWidget(proceed)
 
@@ -166,10 +175,10 @@ class GameScreen(QWidget):
             table_scheme.addWidget(row, 0, i)
 
         for i in range(len(nicks)):  # loop creating grids for opponents
-            box = player_grid(self, nicks[i])
+            box = player_grid(self, nicks[i], True, False)
             table_scheme.addWidget(box, 1, i)
 
-        box = player_grid(self, my_nick)
+        box = player_grid(self, my_nick, True, True)
         table_scheme.addWidget(box, 2, 1)
 
         row = player_label(self, my_nick)
