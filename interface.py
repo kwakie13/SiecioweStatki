@@ -10,8 +10,6 @@ nicks = ["Gracz 1", "Gracz 2", "Gracz 3"]
 columns = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
 buttons = {}
 
-my_nick = "piotrtheduck"
-
 
 def indicate_player_label(self, label):  # function indicating player move (changing label background color)
     label.setStyleSheet("background-color: lightgreen; border: 1 solid black; border-radius: 15; padding: 5")
@@ -29,6 +27,20 @@ def player_grid(self, nick):
     groupBox = QGroupBox()  # box for player's buttons
     grid = QGridLayout()  # creating grid to place buttons
 
+    for i in range(len(columns)):
+        label = QLabel()
+        label.setText(columns[i])
+        label.setAlignment(Qt.AlignCenter)
+
+        grid.addWidget(label, 0, i + 1)
+
+    for i in range(10):
+        label = QLabel()
+        label.setText(str(i + 1))
+        label.setAlignment(Qt.AlignCenter)
+
+        grid.addWidget(label, i + 1, 0)
+
     for j in range(len(columns)):  # for each column
         for k in range(10):  # for each row
             ID = (nick + "_" + columns[j] + str(k + 1))  # ID for a button
@@ -39,7 +51,7 @@ def player_grid(self, nick):
 
             button.clicked.connect(self.whenClicked)  # connecting action to click
 
-            grid.addWidget(button, j, k)  # adding button to grid
+            grid.addWidget(button, j + 1, k + 1)  # adding button to grid
             self.saveButton(button)  # saving button's name
 
     groupBox.setLayout(grid)  # setting box's layout (previously created and filled grid)
@@ -70,39 +82,6 @@ class IntroScreen(QWidget):
     def __init__(self):
         super().__init__()
 
-        # self.setGeometry(100, 100, 600, 400)
-
-        button = QPushButton("Click", self)
-        button.clicked.connect(self.clickMe)
-        button.setGeometry(200, 150, 100, 30)
-
-        self.centerWindow()
-
-        self.setWindowTitle("Statki")
-        self.setWindowIcon(QIcon("ship.png"))
-
-        self.setWindowFlags(Qt.WindowCloseButtonHint | Qt.WindowMinimizeButtonHint)  # blocking window maximizing
-        self.setMaximumSize(self.size())  # prevent resizing
-
-        self.show()
-
-    def centerWindow(self):
-        frameGm = self.frameGeometry()
-        screen = QApplication.desktop().screenNumber(QApplication.desktop().cursor().pos())
-        centerPoint = QApplication.desktop().screenGeometry(screen).center()
-        frameGm.moveCenter(centerPoint)
-        self.move(frameGm.topLeft())
-
-    def clickMe(self):
-        self.w = GameScreen()
-        self.w.show()
-        self.close()
-
-
-class GameScreen(QWidget):
-    def __init__(self):
-        super().__init__()
-
         self.interface()
 
         self.centerWindow()
@@ -116,6 +95,70 @@ class GameScreen(QWidget):
         self.show()
 
     def interface(self):
+        rows = QVBoxLayout()
+
+        groupBox = QGroupBox()
+        nick_line = QHBoxLayout()
+
+        text_line_label = QLabel("Podaj nick:", self)
+        nick_line.addWidget(text_line_label)
+
+        self.text_line = QLineEdit()
+        nick_line.addWidget(self.text_line)
+
+        groupBox.setLayout(nick_line)
+        rows.addWidget(groupBox)
+
+        grid = player_grid(self, "setting_ships")
+        rows.addWidget(grid)
+
+        proceed = QPushButton("Dalej", self)
+        proceed.clicked.connect(self.clickMe)
+        rows.addWidget(proceed)
+
+        self.setLayout(rows)
+
+    def saveButton(self, obj):
+        buttons[obj.objectName()] = obj
+
+    def centerWindow(self):
+        frameGm = self.frameGeometry()
+        screen = QApplication.desktop().screenNumber(QApplication.desktop().cursor().pos())
+        centerPoint = QApplication.desktop().screenGeometry(screen).center()
+        frameGm.moveCenter(centerPoint)
+        self.move(frameGm.topLeft())
+
+    def clickMe(self):
+        self.user_nick = self.text_line.text()
+        self.w = GameScreen(self.user_nick)
+        self.w.show()
+        self.close()
+
+    def whenClicked(self):
+        sender = self.sender()
+
+        if isinstance(sender, QPushButton):
+            pass
+            # print(sender.objectName)
+
+
+class GameScreen(QWidget):
+    def __init__(self, user_nick):
+        super().__init__()
+
+        self.interface(user_nick)
+
+        self.centerWindow()
+
+        self.setWindowTitle("Statki")
+        self.setWindowIcon(QIcon("ship.png"))
+
+        self.setWindowFlags(Qt.WindowCloseButtonHint | Qt.WindowMinimizeButtonHint)  # blocking window maximizing
+        self.setMaximumSize(self.size())  # prevent resizing
+
+        self.show()
+
+    def interface(self, my_nick):
         table_scheme = QGridLayout()  # creating table layout for a window
 
         for i in range(len(nicks)):  # loop creating labels with indicators for opponents
@@ -175,4 +218,5 @@ class GameScreen(QWidget):
 
 app = QApplication(sys.argv)  # creating app
 window = IntroScreen()
+window.text_line.setFocus()
 sys.exit(app.exec_())  # starting the app
