@@ -9,6 +9,19 @@ from PyQt5.QtWidgets import *
 nicks = ["Gracz 1", "Gracz 2", "Gracz 3"]
 columns = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
 buttons = {}
+square_address = {}
+
+local_player_grid = str()
+
+for i in range(100):
+    local_player_grid = local_player_grid + '0'
+
+counter = 1
+
+for i in range(10):
+    for j in range(len(columns)):
+        square_address[str("{}{}".format(columns[j], i + 1))] = counter
+        counter = counter + 1
 
 
 def indicate_player_label(self, label):  # function indicating player move (changing label background color)
@@ -24,7 +37,7 @@ def reset_player_label(self, label):  # function resetting move indicator
 
 
 def player_grid(self, nick, saving, flat):
-    groupBox = QGroupBox()  # box for player's buttons
+    group = QGroupBox()  # box for player's buttons
     grid = QGridLayout()  # creating grid to place buttons
 
     for i in range(len(columns)):
@@ -41,30 +54,28 @@ def player_grid(self, nick, saving, flat):
 
         grid.addWidget(label, i + 1, 0)
 
-    for j in range(len(columns)):  # for each column
-        for k in range(10):  # for each row
-            ID = (nick + "_" + columns[j] + str(k + 1))  # ID for a button
+    for j in range(10):  # for each row
+        for k in range(len(columns)):  # for each column
+            ID = (nick + "_" + columns[k] + str(j + 1))  # ID for a button
 
-            #button = QPushButton()  # creating button with ID as a name
+            button = QPushButton()
+            button.setObjectName(ID)
+            button.clicked.connect(self.whenClicked)  # connecting action to click
 
             if flat:
-                button = QPushButton(enabled = False)
-            else:
-                button = QPushButton()
+                button.setEnabled(False)
 
-            button.setObjectName(ID)
-            button.setMaximumSize(20, 20)
-
-            button.clicked.connect(self.whenClicked)  # connecting action to click
+            button.setStyleSheet("background-color: #f0f0f0; border: 1 solid black")
+            button.setFixedSize(20, 20)
 
             grid.addWidget(button, j + 1, k + 1)  # adding button to grid
 
             if saving:
                 self.saveButton(button)  # saving button's name
 
-    groupBox.setLayout(grid)  # setting box's layout (previously created and filled grid)
+    group.setLayout(grid)  # setting box's layout (previously created and filled grid)
 
-    return groupBox
+    return group
 
 
 def player_label(self, nick):
@@ -84,6 +95,27 @@ def player_label(self, nick):
     groupBox.setLayout(row)
 
     return groupBox
+
+
+def setting_ships_color_change(self, button):
+    color = button.palette().button().color()
+
+    if color.name() == "#f0f0f0":
+        button.setStyleSheet("background-color: green; border: 1 solid black")
+    else:
+        button.setStyleSheet("background-color: #f0f0f0; border: 1 solid black")
+
+
+def index_finder(self, button_name):
+    name_len = len(button_name)
+    for i in range(name_len - 1, -1, -1):
+        if button_name[i] == "_":
+            return square_address[button_name[i + 1:]]
+
+
+def change_grid_string_value(self, index, grid, new_value):
+    grid = grid[:index] + str(new_value) + grid[index + 1:]
+    return grid
 
 
 class IntroScreen(QWidget):
@@ -117,12 +149,12 @@ class IntroScreen(QWidget):
         groupBox.setLayout(nick_line)
         rows.addWidget(groupBox)
 
-        grid = player_grid(self, "setting_ships", False, False)
+        grid = player_grid(self, "setting_ships", True, False)
         rows.addWidget(grid)
 
         proceed = QPushButton("Dalej", self)
 
-        proceed.clicked.connect(self.clickMe)
+        proceed.clicked.connect(self.nextWindow)
         rows.addWidget(proceed)
 
         self.setLayout(rows)
@@ -137,7 +169,7 @@ class IntroScreen(QWidget):
         frameGm.moveCenter(centerPoint)
         self.move(frameGm.topLeft())
 
-    def clickMe(self):
+    def nextWindow(self):
         self.user_nick = self.text_line.text()
         self.w = GameScreen(self.user_nick)
         self.w.show()
@@ -145,6 +177,9 @@ class IntroScreen(QWidget):
 
     def whenClicked(self):
         sender = self.sender()
+        setting_ships_color_change(self, sender)
+        global local_player_grid
+        local_player_grid = change_grid_string_value(self, index_finder(self, sender.objectName()) - 1, local_player_grid, 1)
 
         if isinstance(sender, QPushButton):
             pass
