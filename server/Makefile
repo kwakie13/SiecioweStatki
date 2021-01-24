@@ -2,8 +2,7 @@ CC=gcc
 
 CFLAGS=-c -O2 -Wall -std=gnu99
 
-PROTOCOL_FLAGS=$(CFLAGS) -I./protocol/
-SERVER_FLAGS=$(CFLAGS) -I./protocol/ -I./server/
+SERVER_FLAGS=$(CFLAGS) -I./server/
 
 all: server
 
@@ -13,12 +12,15 @@ clean:
 
 server: out/server
 
-build/protocol/%.o: protocol/%.c
-	$(CC) $(PROTOCOL_FLAGS) $< -o $@
+build/server:
+	mkdir -p build/server
+
+out:
+	mkdir -p out
 
 build/server/%.o: server/%.c
 	$(CC) $(SERVER_FLAGS) $< -o $@
 
-out/server: build/server/main.o build/protocol/protocol.o
-	$(CC) build/server/*.o build/protocol/*.o -o out/server
+out/server: out build/server build/server/main.o build/server/list.o build/server/network.o build/server/buffer.o build/server/protocol.o build/server/game.o
+	$(CC) build/server/*.o -o out/server
 
