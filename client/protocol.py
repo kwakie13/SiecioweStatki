@@ -2,7 +2,17 @@
 #define MAX_PACKET_SIZE 2100000
 #define PLAYER_COUNT 4
 #define SERVER_PORT 3124
+HEADER_SIZE = 8
 
+PKT_LOGIN_ID = 1
+PKT_LOGIN_ACK_ID = 2
+PKT_TURN_START_ID = 3
+PKT_TURN_MOVE_ID = 4
+PKT_TURN_END_ID = 5
+PKT_GAME_START_ID = 6
+PKT_GAME_END_ID = 7
+PKT_FILE_START_ID = 8
+PKT_FILE_BLOCK_ID = 9
 
 #FUNKCJE DEKODUJACE/ENKODUJACE
 def decode_string(bytes):
@@ -97,8 +107,9 @@ class PktTurnStart:
         self.turn = 0
         self.player_id = 0
     
-    def encode(self):
-        return self.turn.to_bytes(4, 'big') + self.player_id.to_bytes(1, 'big')
+    def decode(self, bytes):
+        self.turn = int.from_bytes(bytes[0:4], 'big')
+        self.player_id = int.from_bytes(bytes[4:], 'big')
 
 
 
@@ -165,18 +176,3 @@ class PktFileBlock:
 
     def encode(self):
         return encode_string(self.block)
-
-
-#TESTOWANIE
-header = b'\00\00\00\01\00\00\00\00'
-payload = b'\00\00\00\01\54\01\00\02\00\03\00\04\00\05\00'
-full_packet = header + payload
-
-
-
-pkt = PktHeader()
-pkt.size = 5
-pkt.type = 123030123
-pkt.encode()
-
-
