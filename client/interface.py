@@ -6,7 +6,14 @@ from PyQt5.Qt import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
+import tcpconnector
 import game
+import os
+
+FILE_BLOCK_SIZE = 8000000 #8 MB
+
+game_data = game.Game()
+tcp_manager = tcpconnector.TcpManager()
 
 nicks = ["Gracz 1", "Gracz 2", "Gracz 3"]
 columns = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
@@ -297,14 +304,12 @@ class IntroScreen(QWidget, game_data, tcp_manager):
         elif not ships_checker(self):
             QMessageBox.critical(self, "Błąd ustawienia", "Twoje statki są nieprawidłowe! Sprawdź ich liczbę i wielkość.")
         else:
-            tcp_manager.sendPktLogin(self.user_nick, ships_format_change(local_player_grid))  # SENDING OUR LOGIN
-
+            tcp_manager.sendPktLogin(self.user_nick, ships_format_change(self, local_player_grid))  #SENDING OUR LOGIN
             tcp_manager.receivePacket(game_data)  # WAITING FOR ACK LOGIN
-
             tcp_manager.receivePacket(game_data)  # WAITING FOR GAME START
 
-            if (not (game_data.your_id == 0) and not (game_data.id == 0)):
-                self.w = GameScreen(self.user_nick, game_data, tcp_manager)
+            if not (game_data.your_id == 0) and not (game_data.id == 0):
+                self.w = GameScreen(self.user_nick)
                 self.w.show()
                 self.close()
 
@@ -443,10 +448,7 @@ class VictoryWindow(QWidget):
         self.close()
 
 
-game_data = game.Game()
-tcp_manager = tcpconnector.TcpManager()
-
 app = QApplication(sys.argv)  # creating app
-window = IntroScreen(game_data, tcp_manager)
+window = IntroScreen()
 window.text_line.setFocus()
 sys.exit(app.exec_())  # starting the app
