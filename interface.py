@@ -217,14 +217,6 @@ def ships_checker(self):
         return False
 
 
-def local_grid_verification(self):
-    if neighbour_checker(self):
-        if ships_checker(self):
-            return True
-
-    return False
-
-
 class IntroScreen(QWidget):
     def __init__(self):
         super().__init__()
@@ -278,7 +270,14 @@ class IntroScreen(QWidget):
 
     def nextWindow(self):
         self.user_nick = self.text_line.text()
-        if local_grid_verification(self):
+
+        if self.text_line.text() == "":
+            QMessageBox.critical(self, "Brak nicku", "Podaj nick!")
+        elif not neighbour_checker(self):
+            QMessageBox.critical(self, "Błąd ustawienia", "Statki nie mogą ze sobą sąsiadować!")
+        elif not ships_checker(self):
+            QMessageBox.critical(self, "Błąd ustawienia", "Twoje statki są nieprawidłowe! Sprawdź ich liczbę i wielkość.")
+        else:
             self.w = GameScreen(self.user_nick)
             self.w.show()
             self.close()
@@ -286,16 +285,12 @@ class IntroScreen(QWidget):
     def whenClicked(self):
         sender = self.sender()
         setting_ships_color_change(self, sender)
+
         global local_player_grid
         if local_player_grid[index_finder(self, sender.objectName()) - 1] == '1':
             local_player_grid = change_grid_string_value(self, index_finder(self, sender.objectName()) - 1, local_player_grid, 0)
-
         else:
             local_player_grid = change_grid_string_value(self, index_finder(self, sender.objectName()) - 1, local_player_grid, 1)
-
-        if isinstance(sender, QPushButton):
-            pass
-            # print(sender.objectName)
 
 
 class GameScreen(QWidget):
