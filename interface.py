@@ -135,7 +135,7 @@ def neighbour_checker(self):
                     if (local_player_grid[index] == '1' and local_player_grid[index + 10] == '1') and (local_player_grid[index + 1] == '1' or local_player_grid[index - 1] == '1'):
                         return False
 
-            if i == 9:
+            elif i == 9:
                 if j == 0:
                     if (local_player_grid[index] == '1' and local_player_grid[index + 1] == '1') and (local_player_grid[index] == '1' and local_player_grid[index - 10] == '1'):
                         return False
@@ -342,13 +342,7 @@ class GameScreen(QWidget):
         self.move(frameGm.topLeft())
 
     # def closeEvent(self, event):  # are you sure to quit?
-    #     odp = QMessageBox.question(
-    #         self,
-    #         "Wyjście",
-    #         "Czy na pewno koniec?",
-    #         QMessageBox.Yes | QMessageBox.No,
-    #         QMessageBox.No,  # default option
-    #     )
+    #     odp = QMessageBox.question(self, "Wyjście", "Czy na pewno koniec?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)  # default option
     #
     #     if odp == QMessageBox.Yes:
     #         event.accept()
@@ -361,10 +355,65 @@ class GameScreen(QWidget):
 
     def whenClicked(self):
         sender = self.sender()
+        # self.victory = VictoryWindow()
+        # self.victory.show()
+        # self.close()
 
-        if isinstance(sender, QPushButton):
-            pass
-            # print(sender.objectName)
+
+class VictoryWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+
+        self.interface()
+
+        self.centerWindow()
+
+        self.setWindowTitle("Wygrana!")
+        self.setWindowIcon(QIcon("ship.png"))
+
+        self.setWindowFlags(Qt.WindowCloseButtonHint | Qt.WindowMinimizeButtonHint)  # blocking window maximizing
+        self.setMaximumSize(self.size())  # prevent resizing
+
+        self.show()
+
+    def interface(self):
+        layout = QVBoxLayout()
+
+        message = QLabel()
+        message.setText("Gratulacje! Wygrałeś!\nW nagrodę możesz przesłać plik na serwer.")
+        message.setAlignment(Qt.AlignCenter)
+        layout.addWidget(message)
+
+        find = QPushButton()
+        find.setText("Szukaj...")
+        find.clicked.connect(self.on_click)
+        layout.addWidget(find)
+
+        self.setLayout(layout)
+
+    def centerWindow(self):
+        frameGm = self.frameGeometry()
+        screen = QApplication.desktop().screenNumber(QApplication.desktop().cursor().pos())
+        centerPoint = QApplication.desktop().screenGeometry(screen).center()
+        frameGm.moveCenter(centerPoint)
+        self.move(frameGm.topLeft())
+
+    def closeEvent(self, event):  # are you sure to quit?
+        odp = QMessageBox.question(self, "Wyjście", "Czy na pewno koniec?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)  # default option
+
+        if odp == QMessageBox.Yes:
+            event.accept()
+        else:
+            event.ignore()
+
+    def keyPressEvent(self, e):  # exit with Escape button
+        if e.key() == Qt.Key_Escape:
+            self.close()
+
+    def on_click(self):
+        filename = QFileDialog.getOpenFileName()
+        path_to_file = filename[0]
+        self.close()
 
 
 app = QApplication(sys.argv)  # creating app
