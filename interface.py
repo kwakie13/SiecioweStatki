@@ -118,6 +118,113 @@ def change_grid_string_value(self, index, grid, new_value):
     return grid
 
 
+def neighbour_checker(self):
+    for i in range(10):
+        for j in range(10):
+            index = i * 10 + j
+            if i == 0:
+                if j == 0:
+                    if (local_player_grid[index] == '1' and local_player_grid[index + 1] == '1') and (local_player_grid[index] == '1' and local_player_grid[index + 10] == '1'):
+                        return False
+
+                if j == 9:
+                    if (local_player_grid[index] == '1' and local_player_grid[index - 1] == '1') and (local_player_grid[index] == '1' and local_player_grid[index + 10] == '1'):
+                        return False
+
+                else:
+                    if (local_player_grid[index] == '1' and local_player_grid[index + 10] == '1') and (local_player_grid[index + 1] == '1' or local_player_grid[index - 1] == '1'):
+                        return False
+
+            if i == 9:
+                if j == 0:
+                    if (local_player_grid[index] == '1' and local_player_grid[index + 1] == '1') and (local_player_grid[index] == '1' and local_player_grid[index - 10] == '1'):
+                        return False
+
+                if j == 9:
+                    if (local_player_grid[index] == '1' and local_player_grid[index - 1] == '1') and (local_player_grid[index] == '1' and local_player_grid[index - 10] == '1'):
+                        return False
+
+                else:
+                    if (local_player_grid[index] == '1' and local_player_grid[index - 10] == '1') and (local_player_grid[index + 1] == '1' or local_player_grid[index - 1] == '1'):
+                        return False
+
+            else:
+                if j == 0:
+                    if (local_player_grid[index] == '1' and local_player_grid[index + 1] == '1') and (local_player_grid[index + 10] == '1' or local_player_grid[index - 10] == '1'):
+                        return False
+
+                if j == 9:
+                    if (local_player_grid[index] == '1' and local_player_grid[index - 1] == '1') and (local_player_grid[index + 10] == '1' or local_player_grid[index - 10] == '1'):
+                        return False
+
+                else:
+                    if local_player_grid[index] == '1' and (local_player_grid[index + 1] == '1' or local_player_grid[index - 1] == '1') and (local_player_grid[index + 10] == '1' or local_player_grid[index - 10] == '1'):
+                        return False
+    return True
+
+
+def duplicate_checker(self, list_of_values, value):
+    for i in list_of_values:
+        if i == value:
+            return False
+
+    return True
+
+
+def ships_checker(self):
+    indexes = []
+    ships = []
+
+    for i in range(10):
+        for j in range(10):
+            index = i * 10 + j
+
+            if local_player_grid[index] == '1' and duplicate_checker(self, indexes, index):
+                indexes.append(index)
+                ship = [index]
+                row_number = index // 10
+                column_number = index % 10
+
+                if index + 1 <= 99 and local_player_grid[index + 1] == '1' and duplicate_checker(self, indexes, index + 1) and (index + 1) // 10 == row_number:
+                    indexes.append(index + 1)
+                    ship.append(index + 1)
+
+                    moving_index = index + 2
+
+                    while local_player_grid[moving_index] == '1' and moving_index // 10 == row_number:
+                        indexes.append(moving_index)
+                        ship.append(moving_index)
+                        moving_index = moving_index + 1
+
+                elif index + 10 <= 99 and local_player_grid[index + 10] == '1' and duplicate_checker(self, indexes, index + 10) and (index + 10) % 10 == column_number:
+                    indexes.append(index + 10)
+                    ship.append(index + 10)
+
+                    moving_index = index + 20
+
+                    while local_player_grid[moving_index] == '1' and moving_index % 10 == column_number:
+                        indexes.append(moving_index)
+                        ship.append(moving_index)
+                        moving_index = moving_index + 10
+
+                ships.append(len(ship))
+
+    ships.sort()
+
+    if ships == [1, 1, 1, 1, 2, 2, 2, 3, 3, 4]:
+        return True
+    else:
+        return False
+
+
+def local_grid_verification(self):
+    if neighbour_checker(self):
+        if ships_checker(self):
+            return True
+
+    return False
+
+
 class IntroScreen(QWidget):
     def __init__(self):
         super().__init__()
@@ -171,15 +278,20 @@ class IntroScreen(QWidget):
 
     def nextWindow(self):
         self.user_nick = self.text_line.text()
-        self.w = GameScreen(self.user_nick)
-        self.w.show()
-        self.close()
+        if local_grid_verification(self):
+            self.w = GameScreen(self.user_nick)
+            self.w.show()
+            self.close()
 
     def whenClicked(self):
         sender = self.sender()
         setting_ships_color_change(self, sender)
         global local_player_grid
-        local_player_grid = change_grid_string_value(self, index_finder(self, sender.objectName()) - 1, local_player_grid, 1)
+        if local_player_grid[index_finder(self, sender.objectName()) - 1] == '1':
+            local_player_grid = change_grid_string_value(self, index_finder(self, sender.objectName()) - 1, local_player_grid, 0)
+
+        else:
+            local_player_grid = change_grid_string_value(self, index_finder(self, sender.objectName()) - 1, local_player_grid, 1)
 
         if isinstance(sender, QPushButton):
             pass
