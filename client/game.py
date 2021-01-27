@@ -1,8 +1,5 @@
-
-
 class Game:
     def __init__(self):
-
         self.id = 0
         self.turn = 0
         self.your_id = 0
@@ -13,5 +10,3 @@ class Game:
         self.position_attacked = (0,0)
         self.success_of_attack = 0
         self.winner_player_id = 0
-
-

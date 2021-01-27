@@ -5,8 +5,8 @@ import sys
 from PyQt5.Qt import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
-import game
 
+import game
 
 nicks = ["Gracz 1", "Gracz 2", "Gracz 3"]
 columns = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
@@ -129,7 +129,7 @@ def neighbour_checker(self):
                     if (local_player_grid[index] == '1' and local_player_grid[index + 1] == '1') and (local_player_grid[index] == '1' and local_player_grid[index + 10] == '1'):
                         return False
 
-                if j == 9:
+                elif j == 9:
                     if (local_player_grid[index] == '1' and local_player_grid[index - 1] == '1') and (local_player_grid[index] == '1' and local_player_grid[index + 10] == '1'):
                         return False
 
@@ -142,7 +142,7 @@ def neighbour_checker(self):
                     if (local_player_grid[index] == '1' and local_player_grid[index + 1] == '1') and (local_player_grid[index] == '1' and local_player_grid[index - 10] == '1'):
                         return False
 
-                if j == 9:
+                elif j == 9:
                     if (local_player_grid[index] == '1' and local_player_grid[index - 1] == '1') and (local_player_grid[index] == '1' and local_player_grid[index - 10] == '1'):
                         return False
 
@@ -155,7 +155,7 @@ def neighbour_checker(self):
                     if (local_player_grid[index] == '1' and local_player_grid[index + 1] == '1') and (local_player_grid[index + 10] == '1' or local_player_grid[index - 10] == '1'):
                         return False
 
-                if j == 9:
+                elif j == 9:
                     if (local_player_grid[index] == '1' and local_player_grid[index - 1] == '1') and (local_player_grid[index + 10] == '1' or local_player_grid[index - 10] == '1'):
                         return False
 
@@ -196,7 +196,10 @@ def ships_checker(self):
                     while local_player_grid[moving_index] == '1' and moving_index // 10 == row_number:
                         indexes.append(moving_index)
                         ship.append(moving_index)
-                        moving_index = moving_index + 1
+                        if moving_index + 1 <= 99:
+                            moving_index = moving_index + 1
+                        else:
+                            break
 
                 elif index + 10 <= 99 and local_player_grid[index + 10] == '1' and duplicate_checker(self, indexes, index + 10) and (index + 10) % 10 == column_number:
                     indexes.append(index + 10)
@@ -207,7 +210,10 @@ def ships_checker(self):
                     while local_player_grid[moving_index] == '1' and moving_index % 10 == column_number:
                         indexes.append(moving_index)
                         ship.append(moving_index)
-                        moving_index = moving_index + 10
+                        if moving_index + 10 <= 99:
+                            moving_index = moving_index + 10
+                        else:
+                            break
 
                 ships.append(len(ship))
 
@@ -220,13 +226,14 @@ def ships_checker(self):
 
 
 def ships_format_change(self, grid):
-    table_of_tuples = []
+    tuples_for_server = []
     for i in range(len(grid)):
         if grid[i] == '1':
             x = i % 10 + 1
             y = i // 10 + 1
-            tuple.append((x, y))
-    return table_of_tuples
+            tuples_for_server.append((x, y))
+
+    return tuples_for_server
 
 
 class IntroScreen(QWidget, game_data, tcp_manager):
@@ -290,13 +297,13 @@ class IntroScreen(QWidget, game_data, tcp_manager):
         elif not ships_checker(self):
             QMessageBox.critical(self, "Błąd ustawienia", "Twoje statki są nieprawidłowe! Sprawdź ich liczbę i wielkość.")
         else:
-            tcp_manager.sendPktLogin(self.user_nick, ships_format_change(local_player_grid)) #SENDING OUR LOGIN
+            tcp_manager.sendPktLogin(self.user_nick, ships_format_change(local_player_grid))  # SENDING OUR LOGIN
 
             tcp_manager.receivePacket(game_data)  # WAITING FOR ACK LOGIN
 
             tcp_manager.receivePacket(game_data)  # WAITING FOR GAME START
 
-            if (not(game_data.your_id == 0 ) and not(game_data.id == 0)):
+            if (not (game_data.your_id == 0) and not (game_data.id == 0)):
                 self.w = GameScreen(self.user_nick, game_data, tcp_manager)
                 self.w.show()
                 self.close()
@@ -434,6 +441,7 @@ class VictoryWindow(QWidget):
         filename = QFileDialog.getOpenFileName()
         path_to_file = filename[0]
         self.close()
+
 
 game_data = game.Game()
 tcp_manager = tcpconnector.TcpManager()
