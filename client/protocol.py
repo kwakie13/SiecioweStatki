@@ -86,7 +86,7 @@ class PktLogin:
         bytes = bytes + encode_string(self.username)
 
         for i in range(self.position_count): #POSITION COUNT 20
-            bytes = bytes + encode_position(self.positions[i])
+            bytes = bytes + encode_position(self.positions[i][0], self.positions[i][1])
 
         return bytes
 
@@ -143,9 +143,17 @@ class PktTurnEnd:
 class PktGameStart:
     def __init__(self):
         self.game_id = 0
+        self.player_names = {}
 
     def decode(self, bytes):
         self.game_id = int.from_bytes(bytes[0:4], 'big')
+        read_bytes = 4
+        for i in range(4):
+            decoded = decode_string(bytes[read_bytes:])
+            name = decoded[0]
+            read_bytes2 = decoded[1]
+            read_bytes += read_bytes2
+            self.player_names[i + 1] = name
 
 
 class PktGameEnd:
@@ -175,4 +183,8 @@ class PktFileBlock:
         self.block = ''
 
     def encode(self):
-        return encode_string(self.block)
+        #return encode_string(self.block)
+        return str.encode(self.block)
+
+
+
