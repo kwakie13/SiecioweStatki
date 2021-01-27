@@ -216,6 +216,14 @@ def ships_checker(self):
     else:
         return False
 
+tuple = []
+def ships_format_change(self, grid):
+    for i in range(len(grid)):
+        if grid[i] == '1':
+            x = i % 10 + 1
+            y = i // 10 + 1
+            tuple.append((x, y))
+
 
 class IntroScreen(QWidget):
     def __init__(self):
