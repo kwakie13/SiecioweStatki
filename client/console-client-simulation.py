@@ -1,5 +1,8 @@
-import tcp-connector
+import tcpconnector
 import game
+import os
+
+FILE_BLOCK_SIZE = 8000000 #8MB
 
 #[(0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0)]
 
@@ -8,16 +11,16 @@ positions = [(1,1), (1,2), (1, 3), (1, 4), (3, 2), (3, 3), (3, 4), (5, 2), (5, 3
 
 ilosc_zatopionych = {1: 0, 2: 0, 3: 0, 4: 0}
 
-tcp_manager = TcpManager() #INICJUJEMY POLACZENIE
+tcp_manager = tcpconnector.TcpManager() #INICJUJEMY POLACZENIE
 tcp_manager.sendPktLogin(username, positions) #WYSYLAMY NASZ LOGIN
 
-game_data = Game() #INICJUJEMY GRE
+game_data = game.Game() #INICJUJEMY GRE
 
 tcp_manager.receivePacket(game_data)  # WAITING FOR ACK LOGIN
 
 tcp_manager.receivePacket(game_data)  # WAITING FOR GAME START
 
-if ((game_data.your_id != 0 ) and (game_data.id != 0)):
+if (not(game_data.your_id == 0 ) and not(game_data.id == 0)):
     print("twoje id: " + str(game_data.your_id))
 
 
@@ -34,13 +37,19 @@ if ((game_data.your_id != 0 ) and (game_data.id != 0)):
             
             while(True):
                 w_kogo = input("W kogo chcesz strzelic (id): ")
+                w_kogo = int(w_kogo)
                 x = input("X: ")
+                x = int(x)
                 y = input("Y: ")
+                y = int(y)
 
-                if ilosc_zatopionych[w_kogo] < 20:
+            
+
+                if (ilosc_zatopionych[w_kogo] < 20) and (w_kogo in [1, 2, 3, 4]):
                     break
 
-                elif w_kogo = game_data.your_id:
+
+                elif w_kogo == game_data.your_id:
                     print("nie mozesz strzelic sam w siebie")
 
                 else:
@@ -61,6 +70,23 @@ if ((game_data.your_id != 0 ) and (game_data.id != 0)):
 
         elif game_data.winner_player_id == game_data.your_id: #TY WYGRALES, PRZESYLASZ PLIK
             #TODO: wybieramy plik, przekazujemy jego fullpath do funkcji ktora przesyla go na serwer
+            full_path = 'H:\\OBS\\WIDEO\\wideo01pracprog.mkv'
+            leftData = os.stat(full_path).st_size
+            
+            tcp_manager.sendPktFileStart(full_path)
+
+            with open(full_path, "rb") as opened_file:
+
+                while(leftData > FILE_BLOCK_SIZE):
+                    tcp_manager.sendPktFileBlock(opened_file.read(FILE_BLOCK_SIZE))
+                    leftData = leftData - FILE_BLOCK_SIZE
+                
+                if leftData > 0:
+                    tcp_manager.sendPktFileBlock(opened_file.read(leftData))
+
+                
+                
+
             break
             
 
