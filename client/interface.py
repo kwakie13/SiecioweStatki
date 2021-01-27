@@ -372,13 +372,13 @@ class GameScreen(QWidget, game_data, tcp_manager):
         frameGm.moveCenter(centerPoint)
         self.move(frameGm.topLeft())
 
-    # def closeEvent(self, event):  # are you sure to quit?
-    #     odp = QMessageBox.question(self, "Wyjście", "Czy na pewno koniec?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)  # default option
-    #
-    #     if odp == QMessageBox.Yes:
-    #         event.accept()
-    #     else:
-    #         event.ignore()
+    def closeEvent(self, event):  # are you sure to quit?
+        odp = QMessageBox.question(self, "Wyjście", "Czy na pewno koniec?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)  # default option
+
+        if odp == QMessageBox.Yes:
+            event.accept()
+        else:
+            event.ignore()
 
     def keyPressEvent(self, e):  # exit with Escape button
         if e.key() == Qt.Key_Escape:
@@ -386,7 +386,6 @@ class GameScreen(QWidget, game_data, tcp_manager):
 
     def whenClicked(self):
         sender = self.sender()
-        sender.cha
         # self.victory = VictoryWindow()
         # self.victory.show()
         # self.close()
