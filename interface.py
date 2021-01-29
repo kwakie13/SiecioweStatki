@@ -234,6 +234,34 @@ def ships_format_change(self, grid):
     print(tuples_for_server)
 
 
+def change_name_to_tuple(self, button_name):
+    name_len = len(button_name)
+    button_index = int()
+
+    for i in range(name_len - 1, -1, -1):
+        if button_name[i] == "_":
+            button_index = square_address[button_name[i + 1:]]
+            break
+
+    x = (button_index - 1) % 10 + 1
+    y = (button_index - 1) // 10 + 1
+
+    button_index_tuple = (x, y)
+
+    return button_index_tuple
+
+
+def get_nick_from_button(self, button_name):
+    name_len = len(button_name)
+    player_nick = str()
+
+    for i in range(name_len - 1, -1, -1):
+        if button_name[i] == "_":
+            player_nick = button_name[:i]
+            break
+    return player_nick
+
+
 class IntroScreen(QWidget):
     def __init__(self):
         super().__init__()
@@ -318,6 +346,8 @@ class GameScreen(QWidget):
         self.interface(user_nick)
 
         self.centerWindow()
+        self.position = ()
+        self.attacked_player_ID = int()
 
         self.setWindowTitle("Statki")
         self.setWindowIcon(QIcon("ship.png"))
@@ -373,6 +403,8 @@ class GameScreen(QWidget):
 
     def whenClicked(self):
         sender = self.sender()
+        change_name_to_tuple(self, sender.objectName())
+        self.attacked_player_ID = game.players_dictionary[get_nick_from_button(self, sender.objectName())]
         # self.victory = VictoryWindow()
         # self.victory.show()
         # self.close()
