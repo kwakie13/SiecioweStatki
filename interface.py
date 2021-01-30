@@ -11,11 +11,9 @@ columns = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
 buttons = {}
 square_address = {}
 
-local_player_grid = str()
+local_player_grid = '0' * 100
+print (local_player_grid)
 tuples_for_server = []
-
-for i in range(100):
-    local_player_grid = local_player_grid + '0'
 
 counter = 1
 
