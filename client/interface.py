@@ -18,7 +18,7 @@ FILE_BLOCK_SIZE = 8000000 #8 MB
 game_data = game.Game()
 tcp_manager = tcpconnector.TcpManager()
 
-nicks = ["Gracz 1", "Gracz 2", "Gracz 3"]
+nicks = [] # TODO: PRZENIESC ZAPISYWANIE NICKOW GRACZY PO OTRZYMANIU ICH DO GAME
 columns = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
 buttons = {}
 square_address = {}
@@ -32,19 +32,19 @@ for i in range(10):
         square_address[str("{}{}".format(columns[j], i + 1))] = counter
         counter = counter + 1
 
-#setting player label coulour to indicate move (to green)
+
 def indicate_player_label(self, label):  # function indicating player move (changing label background color)
     label.setStyleSheet("background-color: lightgreen; border: 1 solid black; border-radius: 15; padding: 5")
 
     return label
 
-#resetting player label colour (to default)
+
 def reset_player_label(self, label):  # function resetting move indicator
     label.setStyleSheet("border: 1 solid black; border-radius: 15; padding: 5")
 
     return label
 
-#creating player grid with parameters
+
 def player_grid(self, nick, saving, flat):
     group = QGroupBox()  # box for player's buttons
     grid = QGridLayout()  # creating grid to place buttons
@@ -86,7 +86,7 @@ def player_grid(self, nick, saving, flat):
 
     return group
 
-#creating player label for nick
+
 def player_label(self, nick):
     groupBox = QGroupBox()
     groupBox.setStyleSheet("border : none")
@@ -105,7 +105,7 @@ def player_label(self, nick):
 
     return groupBox
 
-#checked button = green, non-checked button = default (IntroScreen)
+
 def setting_ships_color_change(self, button):
     color = button.palette().button().color()
 
@@ -114,19 +114,19 @@ def setting_ships_color_change(self, button):
     else:
         button.setStyleSheet("background-color: #f0f0f0; border: 1 solid black")
 
-#getting index in grid string from board address (e.g. 1 from A1, 100 from J10)
+
 def index_finder(self, button_name):
     name_len = len(button_name)
     for i in range(name_len - 1, -1, -1):
         if button_name[i] == "_":
             return square_address[button_name[i + 1:]]
 
-#replacing value in grid string with new value
+
 def change_grid_string_value(self, index, grid, new_value):
     grid = grid[:index] + str(new_value) + grid[index + 1:]
     return grid
 
-#checking if ships in the grid string are set properly (no neighbours)
+
 def neighbour_checker(self):
     for i in range(10):
         for j in range(10):
@@ -171,7 +171,7 @@ def neighbour_checker(self):
                         return False
     return True
 
-#function checking if ship from ship_checker was used before
+
 def duplicate_checker(self, list_of_values, value):
     for i in list_of_values:
         if i == value:
@@ -179,7 +179,7 @@ def duplicate_checker(self, list_of_values, value):
 
     return True
 
-#checking if ships in the grid string are set properly (number and sizes)
+
 def ships_checker(self):
     indexes = []
     ships = []
@@ -231,7 +231,7 @@ def ships_checker(self):
     else:
         return False
 
-#changing grid string to tuples
+
 def ships_format_change(self, grid):
     tuples_for_server = []
     for i in range(len(grid)):
@@ -242,7 +242,7 @@ def ships_format_change(self, grid):
 
     return tuples_for_server
 
-#changing button index from button name to tuple
+
 def change_name_to_tuple(self, button_name):
     name_len = len(button_name)
     button_index = int()
@@ -259,7 +259,7 @@ def change_name_to_tuple(self, button_name):
 
     return button_index_tuple
 
-#getting player nick from button name
+
 def get_nick_from_button(self, button_name):
     name_len = len(button_name)
     player_nick = str()
@@ -269,6 +269,7 @@ def get_nick_from_button(self, button_name):
             player_nick = button_name[:i]
             break
     return player_nick
+
 
 #indicating success or its lack after shot
 def change_button_color(self, position_tuple, success, player_id):
@@ -282,6 +283,7 @@ def change_button_color(self, position_tuple, success, player_id):
     else:
         button.setStyleSheet("background-color: red; border: 1 solid black")
 
+
 #get button address (A10) from tuple
 def get_address_from_tuple(self, position_tuple):
     x = position_tuple[0]
@@ -291,10 +293,12 @@ def get_address_from_tuple(self, position_tuple):
 
     return address
 
+
 class IntroScreen(QWidget):
     def __init__(self):
         super().__init__()
 
+        self.w = 0
         self.interface()
 
         self.centerWindow()
@@ -354,13 +358,15 @@ class IntroScreen(QWidget):
         elif not ships_checker(self):
             QMessageBox.critical(self, "Błąd ustawienia", "Twoje statki są nieprawidłowe! Sprawdź ich liczbę i wielkość.")
         else:
+            sender = self.sender()
+            sender.setEnabled(False)
             tcp_manager.sendPktLogin(self.user_nick, ships_format_change(self, local_player_grid), sock) #SENDING OUR LOGIN TODO: check if works
             # TODO: SOMETHING DOESN'T WORK HERE [ exit code -1073740791 (0xC0000409) ] PROBABLY WRITE()
 
-            sock.readyRead().connect(self.onReadyRead())
+            sock.readyRead.connect(self.onReadyRead)
 
-            while sock.bytesAvailable() == 0:
-                print("czekam")
+            #while sock.bytesAvailable() == 0:
+                #print("czekam")
 
             #tcp_manager.receivePacket(game_data)  # WAITING FOR ACK LOGIN
             #tcp_manager.receivePacket(game_data)  # WAITING FOR GAME START
@@ -371,27 +377,40 @@ class IntroScreen(QWidget):
                # self.close()
 
     def onReadyRead(self): # TODO: check if works
-        if self.header.type == 0:
-            if sock.bytesAvailable() >= 8:
+        print("onReadyRead {}".format(sock.bytesAvailable()))
+        while 1:
+            if self.header.type == 0 and sock.bytesAvailable() >= 8:
                 packet_header = sock.read(8)
                 self.header.decode(packet_header)
+                print("header {} {}", self.header.type, self.header.size)
+            elif sock.bytesAvailable() >= self.header.size:
+                packet_payload = sock.read(self.header.size)
+                tcp_manager.receivePacket(packet_payload, self.header.type, game_data)
+                print("wow {0} {1}".format(self.header.type, self.header.size))
+                # TODO: WYWOLANIA FUNKCJI PO ZMIANIE ATRYBUTOW KLASY GAME
+                if self.header.type == protocol.PKT_LOGIN_ACK_ID:
+                    print("otrzymano id")
+                    if not (game_data.your_id == 0) and not (game_data.id == 0):
+                        print("ODPALANIE GAME SCREEN Z PKT_LOGIN_ACK")
+                        sock.readyRead.disconnect(self.onReadyRead)
+                        self.w = GameScreen(self.user_nick)
+                        self.w.show()
+                        self.close()
 
-        elif sock.bytesAvailable() >= self.header.size:
-            packet_payload = sock.read(self.header.size)
-            tcp_manager.receivePacket(packet_payload, self.header.type, game)
-            # TODO: WYWOLANIA FUNKCJI PO ZMIANIE ATRYBUTOW KLASY GAME
-            if self.header.type == protocol.PKT_LOGIN_ACK_ID:
-                print("otrzymano id")
+                elif self.header.type == protocol.PKT_GAME_START_ID:
+                    print("gra rozpoczeta")
+                    if not (game_data.your_id == 0) and not (game_data.id == 0):
+                        print("ODPALANIE GAME SCREEN Z PKT_GAME_START")
+                        sock.readyRead.disconnect(self.onReadyRead)
+                        self.w = GameScreen(self.user_nick)
+                        self.w.show()
+                        self.close()
 
-            elif self.header.type == protocol.PKT_GAME_START_ID:
-                print("gra rozpoczeta")
+                print("game {} {}".format(game_data.your_id, game_data.id))
 
-            if not(game_data.your_id == 0) and not(game_data.id == 0):
-                self.w = GameScreen(self.user_nick)
-                self.w.show()
-                self.close()
-
-            self.header.type = 0 # ZEROWANIE HEADER TYPE
+                self.header.type = 0 # ZEROWANIE HEADER TYPE
+            else:
+                break
 
     def whenClicked(self):
         sender = self.sender()
@@ -427,6 +446,9 @@ class GameScreen(QWidget):
     def interface(self, my_nick):
         table_scheme = QGridLayout()  # creating table layout for a window
 
+        nicks = [game_data.players_dictionary[1], game_data.players_dictionary[2], game_data.players_dictionary[3], game_data.players_dictionary[4]]
+        nicks.remove(game_data.players_dictionary[game_data.your_id])
+
         for i in range(len(nicks)):  # loop creating labels with indicators for opponents
             row = player_label(self, nicks[i])
             table_scheme.addWidget(row, 0, i)
@@ -445,50 +467,51 @@ class GameScreen(QWidget):
 
         self.setLayout(table_scheme)
 
-    def onReadyRead(self): # TODO
-        if self.header.type == 0:
-            if sock.bytesAvailable() >= 8:
+    def onReadyRead(self): # TODO ZMIANA FUNCJI TAK JAK WYZEJ
+        print("onReadyRead2 {}".format(sock.bytesAvailable()))
+        while True:
+            if self.header.type == 0 and sock.bytesAvailable() >= 8:
                 packet_header = sock.read(8)
                 self.header.decode(packet_header)
-        elif sock.bytesAvailable() >= self.header.size:
-            packet_payload = sock.read(self.header.size)
-            tcp_manager.receivePacket(packet_payload, self.header.type, game)
-            # TODO: WYWOLANIA FUNKCJI PO ZMIANIE ATRYBUTOW KLASY GAME
+                print("header2 {} {}", self.header.type, self.header.size)
 
-            if game_data.winner_player_id != 0:
-                # KONIEC GRY TODO: CHECK IF IT WORKS
-                if game_data.winner_player_id == game_data.your_id: # WYGRANA
-                    self.victory = VictoryWindow()
-                    self.victory.show()
-                    self.close()
+            elif sock.bytesAvailable() >= self.header.size:
+                packet_payload = sock.read(self.header.size)
+                tcp_manager.receivePacket(packet_payload, self.header.type, game) #TODO: dlaczego ta funckja nie zwraca odpowienich danyhc do game.c dla gracza 4 nawet nie wchodzimy????
+                print("wow2 {0} {1}".format(self.header.type, self.header.size)) #TODO: ZWRACA wow2 0 0 i RECEIVED UNKOWN PACKET// jeden klient zadzialal(ostatni)
+                # TODO: WYWOLANIA FUNKCJI PO ZMIANIE ATRYBUTOW KLASY GAME
 
-                else: # PRZEGRANA
-                    print("PRZEGRALES")
-                    self.close()
+                if game_data.winner_player_id != 0:
+                    # KONIEC GRY TODO: CHECK IF IT WORKS
+                    if game_data.winner_player_id == game_data.your_id: # WYGRANA
+                        self.victory = VictoryWindow()
+                        self.victory.show()
+                        self.close()
 
-            elif self.header.type == protocol.PKT_TURN_START_ID:
-                # TODO:(PIOTREK) PODSWIETLANIE GRACZA KTOREGO JEST TURA
-                indicate_player_label(self, buttons[str(game_data.players_dictionary[game_data.whose_turn_player_id])+"_label"])
+                    else: # PRZEGRANA
+                        print("PRZEGRALES")
+                        self.close()
 
-                if game_data.whose_turn_player_id == game_data.your_id:
-                    self.position_chosen = 0
-                    self.attacked_player_ID = 0
-                    while(self.attacked_player_ID == 0) or (self.position_chosen == 0):
-                        print("czekam na zaznaczenie pozycji!")
+                elif self.header.type == protocol.PKT_TURN_START_ID:
+                    # TODO:(PIOTREK) PODSWIETLANIE GRACZA KTOREGO JEST TURA CHECK IF IT WORKS  game_data.whose_turn_player_id == 0 ergo zaden z graczy nie dostaje turn start
+                    indicate_player_label(self, buttons[str(game_data.players_dictionary[game_data.whose_turn_player_id]) + "_label"])
 
-                    tcp_manager.sendPktTurnMove(game_data.turn, self.attacked_player_ID, self.position_chosen, sock) # TODO: CHECK IF IT WORKS
+                    if game_data.whose_turn_player_id == game_data.your_id:
+                        self.position_chosen = 0
+                        self.attacked_player_ID = 0
+                        while(self.attacked_player_ID == 0) or (self.position_chosen == 0):
+                            print("czekam na zaznaczenie pozycji!")
 
-            elif self.header.type == protocol.PKT_TURN_END_ID:
-                change_button_color(self, game_data.position_attacked[0], game_data.success_of_attack, game_data.attacked_player)
+                        tcp_manager.sendPktTurnMove(game_data.turn, self.attacked_player_ID, self.position_chosen, sock) # TODO: CHECK IF IT WORKS
+
+                elif self.header.type == protocol.PKT_TURN_END_ID:
+                    # TODO: CHECK IF IT WORKS!!!
+                    change_button_color(self, game_data.position_attacked[0], game_data.success_of_attack, game_data.attacked_player)
 
 
-                # TODO:(PIOTREK)ZAZNACZANIE NA CZERWONO POZYCJI W KTORE SPUDLOWANO I NA ZIELONO POZYCJE W KTORE TRAFIONO
-                # TODO:                                            self.attacked_player = 0
-                #                                                 self.position_attacked = ((0, 0), 2)
-                #  te zmienne w game_data sie nam przydadza            self.success_of_attack = 0
-                pass
-
-            self.header.type = 0  # ZEROWANIE HEADERA
+                self.header.type = 0  # ZEROWANIE HEADERA
+            else:
+                break
 
     def saveButton(self, obj):
         buttons[obj.objectName()] = obj
@@ -518,7 +541,14 @@ class GameScreen(QWidget):
     def whenClicked(self): # TODO: TURN MOVE
         sender = self.sender()
         self.position_chosen = change_name_to_tuple(self, sender.objectName())
-        self.attacked_player_ID = game_data.players_dictionary[get_nick_from_button(self, sender.objectName())]
+        #self.attacked_player_ID = game_data.players_dictionary[get_nick_from_button(self, sender.objectName())]
+        for iterd in range(1, 5):
+            if iterd == game_data.your_id:
+                continue
+            elif get_nick_from_button(self, sender.objectName()) == game_data.players_dictionary[iterd]:
+                self.attacked_player_ID = iterd
+                break
+        print("WYBRANA POZYCJA: {0}  WYBRANY GRACZ: {1}".format(self.position_chosen, self.attacked_player_ID))
         # self.victory = VictoryWindow()
         # self.victory.show()
         # self.close()
