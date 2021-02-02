@@ -21,3 +21,4 @@ void buffer_clear(pkt_buffer_t *buffer);
 pkt_buffer_t *buffer_clone(pkt_buffer_t *buffer);
 
 #endif //SERVER_BUFFER_H
+
