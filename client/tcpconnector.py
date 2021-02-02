@@ -13,30 +13,11 @@ BUFFER_SIZE = 1024
 class TcpManager:
     def __init__(self):
         pass
-        #self.host = '10.50.140.221'
-        #self.port = 3124
-        #self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        #self.client_socket.connect((self.host, self.port))
-
-        #self.client_socket = QTcpSocket()
-        #self.client_socket.connectToHost(self.host, self.port)
-
-        #self.client_socket.readyRead.connect(self.d)
-        #self.client_socket.readyRead()
-
-    #def d(self):
-
-
-    #def close(self):
-        #self.client_socket.close()
 
     def sendBytes(self, packet, client_socket):
-        #self.client_socket.send(packet)
-        #self.client_socket.write(packet)
         client_socket.writeData(packet)
 
-
-    def initPktHeader(self, header_type, size):  # size+8?
+    def initPktHeader(self, header_type, size):
         header = PktHeader()
         header.type = header_type
         header.size = size
@@ -50,8 +31,8 @@ class TcpManager:
         if len(positions_list_of_tuples) == login.position_count:
             login.positions = positions_list_of_tuples
             encoded_payload = login.encode()
-            packet = self.initPktHeader(PKT_LOGIN_ID, len(encoded_payload)) + encoded_payload  # len+8?
-            #self.client_socket.send(packet)
+            packet = self.initPktHeader(PKT_LOGIN_ID, len(encoded_payload)) + encoded_payload
+
             self.sendBytes(packet, client_socket)
         else:
             print("Number of positions is not equal to position count!")
@@ -60,7 +41,7 @@ class TcpManager:
     def receivePktLoginAck(self, game, packet):
 
         login_ack = PktLoginAck()
-        #login_ack.decode(packet[HEADER_SIZE:])
+
         login_ack.decode(packet)
 
         game.your_id = login_ack.player_id  # SENDING TO GAME INSTANCE
@@ -69,9 +50,10 @@ class TcpManager:
     def receivePktTurnStart(self, game, packet):
 
         turn_start = PktTurnStart()
-        #turn_start.decode(packet[HEADER_SIZE:])
+
         turn_start.decode(packet)
         # SENDING TO GAME INSTANCE
+        print("turn {} player {}".format(turn_start.turn, turn_start.player_id))
         game.turn = turn_start.turn
         game.whose_turn_player_id = turn_start.player_id
 
@@ -83,15 +65,15 @@ class TcpManager:
         turn_move.position = position_in_tuple
 
         encoded_payload = turn_move.encode()
-        packet = self.initPktHeader(PKT_TURN_MOVE_ID, len(encoded_payload)) + encoded_payload  # len+8?
-        #self.client_socket.send(packet)
+        packet = self.initPktHeader(PKT_TURN_MOVE_ID, len(encoded_payload)) + encoded_payload
+
         self.sendBytes(packet, client_socket)
 
     # RECEIVING TURN END
     def receivePktTurnEnd(self, game, packet):
 
         turn_end = PktTurnEnd()
-        #turn_end.decode(packet[HEADER_SIZE:])
+
         turn_end.decode(packet)
 
         if not (turn_end.turn == game.turn):
@@ -109,7 +91,7 @@ class TcpManager:
     def receivePktGameStart(self, game, packet):
 
         game_start = PktGameStart()
-        #game_start.decode(packet[HEADER_SIZE:])
+
         game_start.decode(packet)
         # ADDING TO GAME INSTANCE
         game.id = game_start.game_id
@@ -119,7 +101,7 @@ class TcpManager:
     def receivePktGameEnd(self, game, packet):
 
         game_end = PktGameEnd()
-        #game_end.decode(packet[HEADER_SIZE:])
+
         game_end.decode(packet)
 
         if not (game_end.game_id == game.id):
@@ -130,11 +112,6 @@ class TcpManager:
 
     # RECEIVE MANAGER
     def receivePacket(self, packet, packet_header, game):
-        #packet = self.client_socket.recv(8)
-        #packet = self.client_socket.read(8)
-        #header = PktHeader()
-        #header.decode(packet)
-        #packet += self.client_socket.recv(header.size)
 
         if packet_header == PKT_LOGIN_ACK_ID:
             self.receivePktLoginAck(game, packet)
@@ -162,17 +139,15 @@ class TcpManager:
 
         encoded_payload = file_start.encode()
         packet = self.initPktHeader(PKT_FILE_START_ID, len(encoded_payload)) + encoded_payload  # len+8?
-        #self.client_socket.send(packet)
-        #self.client_socket.write(packet)
+
         self.sendBytes(packet, client_socket)
 
-    def sendPktFileBlock(self, file_block, client_socket):
+    def sendPktFileBlock(self, file_block_2, client_socket):
         file_block = PktFileBlock()
-        file_block.block = file_block
+        file_block.block = file_block_2
 
         encoded_payload = file_block.encode()
         packet = self.initPktHeader(PKT_FILE_BLOCK_ID, len(encoded_payload)) + encoded_payload  # len+8?
-        #self.client_socket.send(packet)
-        #self.client_socket.write(packet)
+
         self.sendBytes(packet, client_socket)
 
