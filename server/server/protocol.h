@@ -5,7 +5,7 @@
 #include "stdint.h"
 
 #define MAX_PACKET_SIZE 2100000
-#define POSITION_COUNT 5
+#define POSITION_COUNT 20
 #define PLAYER_COUNT 4
 #define SERVER_PORT 3124
 
@@ -72,6 +72,7 @@ typedef struct pkt_turn_end {
 #define PKT_GAME_START_ID 6
 typedef struct pkt_game_start {
     uint32_t game_id;
+    pkt_string_t player_names[PLAYER_COUNT];
 } pkt_game_start_t;
 
 // server -> klient
@@ -106,6 +107,7 @@ pkt_string_t create_string(const char *data, uint32_t size);
 pkt_string_t decode_string(pkt_buffer_t *buffer);
 void encode_string(pkt_string_t string, pkt_buffer_t *buffer);
 void free_string(pkt_string_t string);
+pkt_string_t clone_string(pkt_string_t other);
 
 pkt_header_t decode_header(pkt_buffer_t *buffer);
 void encode_header(uint32_t type, uint32_t size, pkt_buffer_t *buffer);
@@ -130,5 +132,11 @@ void encode_turn_start(pkt_turn_start_t turn, pkt_buffer_t *buffer);
 void encode_turn_end(pkt_turn_end_t turn, pkt_buffer_t *buffer);
 void encode_game_start(pkt_game_start_t game, pkt_buffer_t *buffer);
 void encode_game_end(pkt_game_end_t game, pkt_buffer_t *buffer);
+
+uint32_t login_ack_length(pkt_login_ack_t login);
+uint32_t turn_start_length(pkt_turn_start_t turn);
+uint32_t turn_end_length(pkt_turn_end_t turn);
+uint32_t game_start_length(pkt_game_start_t game);
+uint32_t game_end_length(pkt_game_end_t game);
 
 #endif //SERVER_PROTOCOL_H
