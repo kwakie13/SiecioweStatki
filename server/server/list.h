@@ -23,3 +23,4 @@ void remove_from_list(list_t *list, void *item);
 void *pop_from_list(list_t *list);
 
 #endif //SERVER_LIST_H
+
