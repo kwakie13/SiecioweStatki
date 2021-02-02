@@ -42,6 +42,11 @@ int buffer_remaining_space(pkt_buffer_t *buffer)
     return (int) (buffer->data - buffer->wptr + buffer->capacity);
 }
 
+int buffer_size(pkt_buffer_t *buffer)
+{
+    return (int) (buffer->wptr - buffer->data);
+}
+
 void buffer_clear(pkt_buffer_t *buffer)
 {
     buffer->wptr = buffer->data;
