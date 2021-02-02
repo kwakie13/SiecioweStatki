@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
 
 import sys
-import time
 
 from PyQt5.Qt import *
 from PyQt5.QtGui import *
@@ -13,12 +12,12 @@ import game
 import protocol
 import os
 
-FILE_BLOCK_SIZE = 8000000 #8 MB
+FILE_BLOCK_SIZE = 4096
 
 game_data = game.Game()
 tcp_manager = tcpconnector.TcpManager()
 
-nicks = [] # TODO: PRZENIESC ZAPISYWANIE NICKOW GRACZY PO OTRZYMANIU ICH DO GAME
+nicks = []
 columns = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
 buttons = {}
 square_address = {}
@@ -271,7 +270,7 @@ def get_nick_from_button(self, button_name):
     return player_nick
 
 
-#indicating success or its lack after shot
+# indicating success or its lack after shot
 def change_button_color(self, position_tuple, success, player_id):
     button_address = get_address_from_tuple(self, position_tuple)
     player_nick = game_data.players_dictionary[player_id]
@@ -284,7 +283,7 @@ def change_button_color(self, position_tuple, success, player_id):
         button.setStyleSheet("background-color: red; border: 1 solid black")
 
 
-#get button address (A10) from tuple
+# get button address (A10) from tuple
 def get_address_from_tuple(self, position_tuple):
     x = position_tuple[0]
     y = position_tuple[1]
@@ -305,6 +304,7 @@ class IntroScreen(QWidget):
 
         self.setWindowTitle("Statki")
         self.setWindowIcon(QIcon("ship.png"))
+        self.dont_want_ready = False
 
         self.setWindowFlags(Qt.WindowCloseButtonHint | Qt.WindowMinimizeButtonHint)  # blocking window maximizing
         self.setMaximumSize(self.size())  # prevent resizing
@@ -360,38 +360,30 @@ class IntroScreen(QWidget):
         else:
             sender = self.sender()
             sender.setEnabled(False)
-            tcp_manager.sendPktLogin(self.user_nick, ships_format_change(self, local_player_grid), sock) #SENDING OUR LOGIN TODO: check if works
-            # TODO: SOMETHING DOESN'T WORK HERE [ exit code -1073740791 (0xC0000409) ] PROBABLY WRITE()
+            tcp_manager.sendPktLogin(self.user_nick, ships_format_change(self, local_player_grid), sock) #SENDING OUR LOGIN
+
 
             sock.readyRead.connect(self.onReadyRead)
 
-            #while sock.bytesAvailable() == 0:
-                #print("czekam")
 
-            #tcp_manager.receivePacket(game_data)  # WAITING FOR ACK LOGIN
-            #tcp_manager.receivePacket(game_data)  # WAITING FOR GAME START
 
-            #if not (game_data.your_id == 0) and not (game_data.id == 0):
-               # self.w = GameScreen(self.user_nick)
-               # self.w.show()
-               # self.close()
-
-    def onReadyRead(self): # TODO: check if works
+    def onReadyRead(self):
         print("onReadyRead {}".format(sock.bytesAvailable()))
-        while 1:
+        while not self.dont_want_ready:
             if self.header.type == 0 and sock.bytesAvailable() >= 8:
                 packet_header = sock.read(8)
                 self.header.decode(packet_header)
                 print("header {} {}", self.header.type, self.header.size)
-            elif sock.bytesAvailable() >= self.header.size:
+            elif self.header.type != 0 and sock.bytesAvailable() >= self.header.size:
                 packet_payload = sock.read(self.header.size)
                 tcp_manager.receivePacket(packet_payload, self.header.type, game_data)
                 print("wow {0} {1}".format(self.header.type, self.header.size))
-                # TODO: WYWOLANIA FUNKCJI PO ZMIANIE ATRYBUTOW KLASY GAME
+
                 if self.header.type == protocol.PKT_LOGIN_ACK_ID:
                     print("otrzymano id")
                     if not (game_data.your_id == 0) and not (game_data.id == 0):
                         print("ODPALANIE GAME SCREEN Z PKT_LOGIN_ACK")
+                        self.dont_want_ready = True
                         sock.readyRead.disconnect(self.onReadyRead)
                         self.w = GameScreen(self.user_nick)
                         self.w.show()
@@ -401,6 +393,7 @@ class IntroScreen(QWidget):
                     print("gra rozpoczeta")
                     if not (game_data.your_id == 0) and not (game_data.id == 0):
                         print("ODPALANIE GAME SCREEN Z PKT_GAME_START")
+                        self.dont_want_ready = True
                         sock.readyRead.disconnect(self.onReadyRead)
                         self.w = GameScreen(self.user_nick)
                         self.w.show()
@@ -432,6 +425,7 @@ class GameScreen(QWidget):
         self.centerWindow()
         self.position_chosen = ()
         self.attacked_player_ID = int()
+        self.clicked = False
 
         self.setWindowTitle("Statki")
         self.setWindowIcon(QIcon("ship.png"))
@@ -442,6 +436,8 @@ class GameScreen(QWidget):
         self.header = protocol.PktHeader()
 
         self.show()
+
+        self.onReadyRead()
 
     def interface(self, my_nick):
         table_scheme = QGridLayout()  # creating table layout for a window
@@ -467,7 +463,7 @@ class GameScreen(QWidget):
 
         self.setLayout(table_scheme)
 
-    def onReadyRead(self): # TODO ZMIANA FUNCJI TAK JAK WYZEJ
+    def onReadyRead(self):
         print("onReadyRead2 {}".format(sock.bytesAvailable()))
         while True:
             if self.header.type == 0 and sock.bytesAvailable() >= 8:
@@ -475,14 +471,14 @@ class GameScreen(QWidget):
                 self.header.decode(packet_header)
                 print("header2 {} {}", self.header.type, self.header.size)
 
-            elif sock.bytesAvailable() >= self.header.size:
+            elif self.header.type != 0 and sock.bytesAvailable() >= self.header.size:
                 packet_payload = sock.read(self.header.size)
-                tcp_manager.receivePacket(packet_payload, self.header.type, game) #TODO: dlaczego ta funckja nie zwraca odpowienich danyhc do game.c dla gracza 4 nawet nie wchodzimy????
-                print("wow2 {0} {1}".format(self.header.type, self.header.size)) #TODO: ZWRACA wow2 0 0 i RECEIVED UNKOWN PACKET// jeden klient zadzialal(ostatni)
-                # TODO: WYWOLANIA FUNKCJI PO ZMIANIE ATRYBUTOW KLASY GAME
+                tcp_manager.receivePacket(packet_payload, self.header.type, game_data)
+                print("wow2 {0} {1}".format(self.header.type, self.header.size))
+
 
                 if game_data.winner_player_id != 0:
-                    # KONIEC GRY TODO: CHECK IF IT WORKS
+                    # KONIEC GRY
                     if game_data.winner_player_id == game_data.your_id: # WYGRANA
                         self.victory = VictoryWindow()
                         self.victory.show()
@@ -493,21 +489,18 @@ class GameScreen(QWidget):
                         self.close()
 
                 elif self.header.type == protocol.PKT_TURN_START_ID:
-                    # TODO:(PIOTREK) PODSWIETLANIE GRACZA KTOREGO JEST TURA CHECK IF IT WORKS  game_data.whose_turn_player_id == 0 ergo zaden z graczy nie dostaje turn start
+                    self.clicked = False
+                    if game_data.whose_turn_player_id == 0:
+                        print("NIE PRZEKAZANO ID DO GAME_DATA")
+                        break
+
+                    for reset_i in range(1, 5):
+                        reset_player_label(self, buttons[str(game_data.players_dictionary[reset_i]) + "_label"])
+
                     indicate_player_label(self, buttons[str(game_data.players_dictionary[game_data.whose_turn_player_id]) + "_label"])
 
-                    if game_data.whose_turn_player_id == game_data.your_id:
-                        self.position_chosen = 0
-                        self.attacked_player_ID = 0
-                        while(self.attacked_player_ID == 0) or (self.position_chosen == 0):
-                            print("czekam na zaznaczenie pozycji!")
-
-                        tcp_manager.sendPktTurnMove(game_data.turn, self.attacked_player_ID, self.position_chosen, sock) # TODO: CHECK IF IT WORKS
-
                 elif self.header.type == protocol.PKT_TURN_END_ID:
-                    # TODO: CHECK IF IT WORKS!!!
                     change_button_color(self, game_data.position_attacked[0], game_data.success_of_attack, game_data.attacked_player)
-
 
                 self.header.type = 0  # ZEROWANIE HEADERA
             else:
@@ -538,20 +531,22 @@ class GameScreen(QWidget):
         if e.key() == Qt.Key_Escape:
             self.close()
 
-    def whenClicked(self): # TODO: TURN MOVE
+    def whenClicked(self):
         sender = self.sender()
         self.position_chosen = change_name_to_tuple(self, sender.objectName())
-        #self.attacked_player_ID = game_data.players_dictionary[get_nick_from_button(self, sender.objectName())]
+
         for iterd in range(1, 5):
             if iterd == game_data.your_id:
                 continue
             elif get_nick_from_button(self, sender.objectName()) == game_data.players_dictionary[iterd]:
                 self.attacked_player_ID = iterd
                 break
+
+        if game_data.whose_turn_player_id == game_data.your_id and not self.clicked:
+            self.clicked = True
+            tcp_manager.sendPktTurnMove(game_data.turn, self.attacked_player_ID, self.position_chosen, sock)
+
         print("WYBRANA POZYCJA: {0}  WYBRANY GRACZ: {1}".format(self.position_chosen, self.attacked_player_ID))
-        # self.victory = VictoryWindow()
-        # self.victory.show()
-        # self.close()
 
 
 class VictoryWindow(QWidget):
@@ -568,6 +563,10 @@ class VictoryWindow(QWidget):
         self.setWindowFlags(Qt.WindowCloseButtonHint | Qt.WindowMinimizeButtonHint)  # blocking window maximizing
         self.setMaximumSize(self.size())  # prevent resizing
 
+        self.open_file = None
+        self.data_to_send = 0
+        self.finished = False
+
         self.show()
 
     def interface(self):
@@ -582,6 +581,8 @@ class VictoryWindow(QWidget):
         find.setText("Szukaj...")
         find.clicked.connect(self.on_click)
         layout.addWidget(find)
+
+        sock.bytesWritten.connect(self.bytesWritten)
 
         self.setLayout(layout)
 
@@ -604,22 +605,45 @@ class VictoryWindow(QWidget):
         if e.key() == Qt.Key_Escape:
             self.close()
 
-    def on_click(self): # TODO: CHECK IF IT WORKS
+    def bytesWritten(self):
+        if self.finished:
+            self.close()
+
+        print("bytes Written sie odpala")
+        if not self.open_file or self.data_to_send <= 0:
+            print("plik nie otwarty lub brak danych do przeslania")
+            return
+        print("wysylamy bloczek1")
+        print(self.data_to_send)
+        if self.data_to_send >= FILE_BLOCK_SIZE:
+            data = self.open_file.read(FILE_BLOCK_SIZE)
+            print("wysylamy bloczek11")
+            tcp_manager.sendPktFileBlock(data, sock)
+            self.data_to_send = self.data_to_send - FILE_BLOCK_SIZE
+        else:
+            data = self.open_file.read(self.data_to_send)
+            print("wysylamy bloczek12")
+            tcp_manager.sendPktFileBlock(data, sock)
+            self.data_to_send = 0
+        print("wysylamy bloczek2")
+        print(self.data_to_send)
+
+        if self.data_to_send == 0:
+            self.finished = True
+
+    def on_click(self):
         filename = QFileDialog.getOpenFileName()
+
         path_to_file = filename[0]
+        print(path_to_file)
+
         tcp_manager.sendPktFileStart(path_to_file, sock)
 
         left_data = os.stat(path_to_file).st_size
+        print(left_data)
 
-        with open(path_to_file, "rb") as opened_file:
-            while left_data > FILE_BLOCK_SIZE:
-                tcp_manager.sendPktFileBlock(opened_file.read(FILE_BLOCK_SIZE), sock)
-                left_data = left_data - FILE_BLOCK_SIZE
-
-            if left_data > 0:
-                tcp_manager.sendPktFileBlock(opened_file.read(left_data), sock)
-
-        self.close()
+        self.open_file = open(path_to_file, "rb")
+        self.data_to_send = left_data
 
 
 app = QApplication(sys.argv)  # creating app
