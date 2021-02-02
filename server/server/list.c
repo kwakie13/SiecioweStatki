@@ -34,6 +34,7 @@ void insert_to_list(list_t *list, void *data)
     *current = new;
 }
 
+
 void remove_from_list(list_t *list, void *item)
 {
     list_item_t **ptr = &list->items;
