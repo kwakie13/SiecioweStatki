@@ -54,6 +54,17 @@ pkt_string_t create_string(const char *data, uint32_t size)
     return str;
 }
 
+pkt_string_t clone_string(pkt_string_t other)
+{
+    pkt_string_t str;
+
+    str.size = other.size;
+    str.data = malloc((size_t) other.size);
+    memcpy(str.data, other.data, other.size);
+
+    return str;
+}
+
 pkt_string_t decode_string(pkt_buffer_t *buffer)
 {
     uint32_t size = decode_u32(buffer);
@@ -193,10 +204,45 @@ void encode_turn_end(pkt_turn_end_t turn, pkt_buffer_t *buffer)
 void encode_game_start(pkt_game_start_t game, pkt_buffer_t *buffer)
 {
     encode_u32(game.game_id, buffer);
+
+    for (int i = 0; i < PLAYER_COUNT; ++i) {
+        encode_string(game.player_names[i], buffer);
+    }
 }
 
 void encode_game_end(pkt_game_end_t game, pkt_buffer_t *buffer)
 {
     encode_u32(game.game_id, buffer);
     encode_u8(game.winner_player_id, buffer);
+}
+
+uint32_t login_ack_length(pkt_login_ack_t login)
+{
+    return sizeof(uint8_t);
+}
+
+uint32_t turn_start_length(pkt_turn_start_t turn)
+{
+    return sizeof(uint32_t) + sizeof(uint8_t);
+}
+
+uint32_t turn_end_length(pkt_turn_end_t turn)
+{
+    return sizeof(uint32_t) + (3 * sizeof(uint8_t)) + (2 * sizeof(uint8_t));
+}
+
+uint32_t game_start_length(pkt_game_start_t game)
+{
+    uint32_t player_names = 0;
+
+    for (int i = 0; i < PLAYER_COUNT; ++i) {
+        player_names += game.player_names[i].size + sizeof(uint32_t);
+    }
+
+    return sizeof(uint32_t) + player_names;
+}
+
+uint32_t game_end_length(pkt_game_end_t game)
+{
+    return sizeof(uint32_t) + sizeof(uint8_t);
 }
