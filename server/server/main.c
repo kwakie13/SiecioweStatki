@@ -124,9 +124,7 @@ static int read_until(int fd, pkt_buffer_t *buffer, int size) {
 }
 
 static void handle_client_event(server_data_t *server, client_data_t *client, uint32_t events) {
-    if ((events & EPOLLERR)) {
-        // TODO: bład
-    } else if (events & EPOLLIN) {
+    if (events & EPOLLIN) {
         while (1) {
             if (client->received_header.type == 0) {
                 int result = read_until(client->fd, client->receive_buffer, 8);
@@ -146,8 +144,10 @@ static void handle_client_event(server_data_t *server, client_data_t *client, ui
                     client->received_header.type = 0;
                     buffer_clear(client->receive_buffer);
                 } else if (result == 1) {
+                    printf("result=1\n");
                     break;
                 } else {
+                    printf("result=2\n");
                     // TODO: błąd lub klient się rozłączył
                     break;
                 }
@@ -155,6 +155,8 @@ static void handle_client_event(server_data_t *server, client_data_t *client, ui
         }
     } else if (events & EPOLLOUT) {
         // wysyłka jest po przetworzeniu eventów
+    } else if (events & EPOLLERR) {
+        // TODO: błąd
     }
 }
 
