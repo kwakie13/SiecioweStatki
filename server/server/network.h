@@ -26,3 +26,4 @@ void broadcast_to_players(list_t *clients, pkt_buffer_t *buffer);
 void broadcast_to_clients(list_t *clients, pkt_buffer_t *buffer);
 
 #endif //SERVER_NETWORK_H
+
