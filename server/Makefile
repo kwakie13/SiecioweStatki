@@ -24,3 +24,4 @@ build/server/%.o: server/%.c
 out/server: out build/server build/server/main.o build/server/list.o build/server/network.o build/server/buffer.o build/server/protocol.o build/server/game.o
 	$(CC) build/server/*.o -o out/server
 
+
