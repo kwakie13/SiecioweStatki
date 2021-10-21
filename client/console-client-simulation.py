@@ -1,27 +1,4 @@
-# import os
-#
-# import game
-# import tcpconnector
-#
-# FILE_BLOCK_SIZE = 8000000  # 8MB
-#
-# # [(0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0)]
-#
-# username = "Szymon"
-# positions = [(1, 1), (1, 2), (1, 3), (1, 4), (3, 2), (3, 3), (3, 4), (5, 2), (5, 3), (5, 4), (1, 7), (1, 8), (3, 7), (3, 8), (5, 7), (5, 8), (7, 10), (8, 6), (9, 4), (10, 2)]
-#
-# ilosc_zatopionych = {1: 0, 2: 0, 3: 0, 4: 0}
-#
-# tcp_manager = tcpconnector.TcpManager()  # INICJUJEMY POLACZENIE
-# tcp_manager.sendPktLogin(username, positions)  # WYSYLAMY NASZ LOGIN
-#
-# game_data = game.Game()  # INICJUJEMY GRE
-#
-# tcp_manager.receivePacket(game_data)  # WAITING FOR ACK LOGIN
-# tcp_manager.receivePacket(game_data)  # WAITING FOR GAME START
-#
-# if (not (game_data.your_id == 0) and not (game_data.id == 0)):
-#     print("twoje id: " + str(game_data.your_id))
+
 
     while (True):
         prev_turn = game_data.turn
